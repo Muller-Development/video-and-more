@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Upload Platform</title>
+  <style>
+    body { font-family: Arial; padding: 40px; background: #f4f4f4; }
+    video { width: 100%; max-width: 500px; margin-top: 20px; }
+    .video-item { background: white; padding: 20px; margin: 20px 0; border-radius: 10px; }
+    button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h1>🎥 Video Upload Platform</h1>
+
+  <input type="file" id="videoInput" />
+  <button id="uploadBtn">Upload Video</button>
+
+  <h2>Mijn Video’s</h2>
+  <div id="videoList"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+  // 🔥 VERVANG DIT MET JOUW EIGEN FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyCElW8vRzRrd_RCjJu6ecvTmSXTFnAV9nM",
+    authDomain: "video-and-more-e6abd.firebaseapp.com",
+    projectId: "video-and-more-e6abd",
+    storageBucket: "video-and-more-e6abd.firebasestorage.app",
+    messagingSenderId: "296078291430",
+    appId: "1:296078291430:web:c8d3f96e140cb9f3a9a627"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const storage = getStorage(app);
+  const auth = getAuth();
+
+  signInAnonymously(auth);
+
+  const uploadBtn = document.getElementById("uploadBtn");
+  const videoInput = document.getElementById("videoInput");
+  const videoList = document.getElementById("videoList");
+
+  uploadBtn.addEventListener("click", async () => {
+    const file = videoInput.files[0];
+    if (!file) return alert("Selecteer eerst een video.");
+
+    const storageRef = ref(storage, `videos/${file.name}`);
+    await uploadBytes(storageRef, file);
+
+    alert("✅ Upload succesvol!");
+    loadVideos();
+  });
+
+  async function loadVideos() {
+    videoList.innerHTML = "";
+    const listRef = ref(storage, "videos");
+    const res = await listAll(listRef);
+
+    res.items.forEach(async (itemRef) => {
+      const url = await getDownloadURL(itemRef);
+
+      const div = document.createElement("div");
+      div.className = "video-item";
+      div.innerHTML = `
+        <video controls src="${url}"></video><br>
+        <a href="${url}" download>
+          <button>⬇ Download</button>
+        </a>
+      `;
+      videoList.appendChild(div);
+    });
+  }
+
+  loadVideos();
+</script>
+
+</body>
+</html>
